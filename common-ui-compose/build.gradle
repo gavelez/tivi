@@ -15,8 +15,6 @@
  *
  */
 
-import app.tivi.buildsrc.Libs
-
 apply plugin: 'com.android.library'
 
 apply plugin: 'kotlin-android'
@@ -38,8 +36,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion Libs.Kotlin.version
-        kotlinCompilerExtensionVersion Libs.AndroidX.Compose.version
+        kotlinCompilerExtensionVersion Versions.compose
     }
 }
 

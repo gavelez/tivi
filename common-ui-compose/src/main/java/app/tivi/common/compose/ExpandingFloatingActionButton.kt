@@ -22,11 +22,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.FloatingActionButtonConstants
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.FloatingActionButtonElevation
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.contentColorFor
@@ -47,7 +47,7 @@ fun ExpandableFloatingActionButton(
     shape: Shape = MaterialTheme.shapes.small.copy(CornerSize(percent = 50)),
     backgroundColor: Color = MaterialTheme.colors.secondary,
     contentColor: Color = contentColorFor(backgroundColor),
-    elevation: FloatingActionButtonElevation = FloatingActionButtonConstants.defaultElevation(),
+    elevation: FloatingActionButtonElevation = FloatingActionButtonDefaults.elevation(),
     expanded: Boolean = true
 ) {
     FloatingActionButton(
@@ -60,7 +60,7 @@ fun ExpandableFloatingActionButton(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             AnimatedVisibility(visible = expanded) {
-                Spacer(Modifier.preferredWidth(20.dp))
+                Spacer(Modifier.width(20.dp))
             }
 
             icon()

@@ -16,25 +16,24 @@
 
 package app.tivi.account
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayout
-import androidx.compose.foundation.layout.FlowMainAxisAlignment
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredHeight
-import androidx.compose.foundation.layout.preferredSize
-import androidx.compose.foundation.layout.preferredSizeIn
-import androidx.compose.foundation.layout.preferredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AmbientContentAlpha
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Divider
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Surface
@@ -43,22 +42,23 @@ import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Providers
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import app.tivi.common.compose.VectorImage
+import app.tivi.common.compose.SimpleFlowRow
+import app.tivi.common.compose.foregroundColor
 import app.tivi.data.entities.TraktUser
 import app.tivi.trakt.TraktAuthState
 import dev.chrisbanes.accompanist.coil.CoilImage
 import org.threeten.bp.OffsetDateTime
 import org.threeten.bp.ZoneOffset
 
-@OptIn(ExperimentalLayout::class)
 @Composable
 fun AccountUi(
     viewState: AccountUiViewState,
@@ -66,23 +66,24 @@ fun AccountUi(
 ) {
     Surface {
         Column {
-            Spacer(modifier = Modifier.preferredHeight(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (viewState.user != null) {
                 UserRow(
                     user = viewState.user,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Spacer(modifier = Modifier.preferredHeight(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             Box(
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
                     .wrapContentSize(Alignment.CenterEnd)
                     .align(Alignment.End)
             ) {
-                FlowRow(
-                    mainAxisAlignment = FlowMainAxisAlignment.End,
+                SimpleFlowRow(
+                    mainAxisArrangement = Arrangement.End,
                     mainAxisSpacing = 8.dp,
                     crossAxisSpacing = 4.dp,
                 ) {
@@ -102,17 +103,26 @@ fun AccountUi(
                 }
             }
 
-            Spacer(modifier = Modifier.preferredHeight(16.dp).fillMaxWidth())
+            Spacer(
+                modifier = Modifier
+                    .height(16.dp)
+                    .fillMaxWidth()
+            )
 
             Divider()
 
             AppAction(
-                label = stringResource(id = R.string.settings_title),
+                label = stringResource(R.string.settings_title),
                 icon = Icons.Default.Settings,
+                contentDescription = stringResource(R.string.settings_title),
                 onClick = { actioner(OpenSettings) }
             )
 
-            Spacer(modifier = Modifier.preferredHeight(8.dp).fillMaxWidth())
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+                    .fillMaxWidth()
+            )
         }
     }
 }
@@ -130,13 +140,15 @@ private fun UserRow(
         if (avatarUrl != null) {
             CoilImage(
                 data = avatarUrl,
+                contentDescription = stringResource(R.string.cd_profile_pic, user.name),
                 fadeIn = true,
-                modifier = Modifier.preferredSize(40.dp)
+                modifier = Modifier
+                    .size(40.dp)
                     .clip(RoundedCornerShape(50))
             )
         }
 
-        Spacer(modifier = Modifier.preferredWidth(8.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         Column {
             Text(
@@ -144,7 +156,7 @@ private fun UserRow(
                 style = MaterialTheme.typography.subtitle2
             )
 
-            Providers(AmbientContentAlpha provides ContentAlpha.medium) {
+            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 Text(
                     text = user.username,
                     style = MaterialTheme.typography.caption
@@ -158,21 +170,27 @@ private fun UserRow(
 private fun AppAction(
     label: String,
     icon: ImageVector,
+    contentDescription: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth()
-            .preferredSizeIn(minHeight = 48.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .sizeIn(minHeight = 48.dp)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Spacer(modifier = Modifier.preferredWidth(8.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
-        VectorImage(vector = icon)
+        Image(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            colorFilter = ColorFilter.tint(foregroundColor())
+        )
 
-        Spacer(modifier = Modifier.preferredWidth(16.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
         Text(
             text = label,

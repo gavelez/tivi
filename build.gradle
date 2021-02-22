@@ -15,8 +15,8 @@
  *
  */
 
-import app.tivi.buildsrc.Libs
-import app.tivi.buildsrc.Versions
+import app.tivi.buildsrc.DependencyUpdates
+import app.tivi.buildsrc.ReleaseType
 
 buildscript {
     ext.buildConfig = [
@@ -24,6 +24,8 @@ buildscript {
             'minSdk'    : 23,
             'targetSdk' : 30,
     ]
+
+    apply from: rootProject.file('versions.gradle')
 
     repositories {
         google()
@@ -48,19 +50,21 @@ buildscript {
 }
 
 plugins {
-    id 'com.diffplug.spotless' version '5.7.0'
-    id 'com.github.ben-manes.versions' version '0.33.0'
+    id 'com.diffplug.spotless' version '5.10.2'
+    id 'com.github.ben-manes.versions' version '0.36.0'
 }
 
 allprojects {
+    apply from: rootProject.file('versions.gradle')
+
     repositories {
         google()
         mavenCentral()
         jcenter()
 
         // Jetpack Compose SNAPSHOTs
-        if (Libs.AndroidX.Compose.version.endsWith("SNAPSHOT")) {
-            maven { url Libs.AndroidX.Compose.snapshotUrl }
+        if (Versions.compose.endsWith("SNAPSHOT")) {
+            maven { url "https://androidx.dev/snapshots/builds/${Versions.composesnapshot}/artifacts/repository/" }
         }
 
         // Used for Accompanist snapshots
@@ -75,7 +79,7 @@ subprojects {
     configurations.configureEach {
         // We forcefully exclude AppCompat + MDC from any transitive dependencies.
         // This is a Compose app, so there's no need for these.
-        exclude group: 'androidx.appcompat', module: 'appcompat'
+        exclude group: 'androidx.appcompat'
         exclude group: 'com.google.android.material', module: 'material'
         exclude group: 'com.google.android.material', module: 'material'
 
@@ -87,23 +91,6 @@ subprojects {
                 // kotlin-stdlib-jre7 no longer exists in 1.4, so we force the
                 // kotlin-stdlib module instead
                 details.useTarget Libs.Kotlin.stdlib
-            }
-
-            if ((group.startsWith('androidx.ui') || group.startsWith('androidx.compose'))
-                    && Libs.AndroidX.Compose.version.endsWith('SNAPSHOT')) {
-                // If we're using a SNAPSHOT version of Compose, we need to  force all
-                // the SNAPSHOT version. We may be using other dependencies which rely
-                // on stable version of Compose (such as a MDC Theme Adapter), which will
-                // pin the version back.
-                // This may not always work if there's binary changes in the snapshot.
-                details.useVersion Libs.AndroidX.Compose.version
-            }
-
-            // The Compose Compiler Maven group/module names changed in alpha04, but AGP
-            // hasn't yet been updated. We workaround that by forcing the new group/module names.
-            // TODO remove this once AGP has been updated
-            if (group == 'androidx.compose' && module == 'compose-compiler') {
-                details.useTarget(Libs.AndroidX.Compose.compiler)
             }
         }
     }
@@ -130,11 +117,25 @@ subprojects {
             freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.FlowPreview"
             freeCompilerArgs += "-Xopt-in=kotlin.Experimental"
 
-            freeCompilerArgs += "-Xallow-jvm-ir-dependencies"
-
             // Set JVM target to 1.8
             jvmTarget = "1.8"
         }
+    }
+}
+
+/**
+ * Update dependencyUpdates task to reject versions which are more 'unstable' than our
+ * current version.
+ */
+tasks.named("dependencyUpdates").configure {
+    rejectVersionIf {
+        def current = DependencyUpdates.versionToRelease(it.currentVersion)
+        // If we're using a SNAPSHOT, ignore since we must be doing so for a reason.
+        if (current == ReleaseType.SNAPSHOT) return true
+
+        // Otherwise we reject if the candidate is more 'unstable' than our version
+        def candidate = DependencyUpdates.versionToRelease(it.candidate.version)
+        return candidate.isLessStableThan(current)
     }
 }
 

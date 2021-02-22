@@ -15,8 +15,6 @@
  *
  */
 
-import app.tivi.buildsrc.Libs
-
 import java.nio.file.Files
 
 plugins {
@@ -92,20 +90,13 @@ android {
     lintOptions {
         // Disable lintVital. Not needed since lint is run on CI
         checkReleaseBuilds false
-        // Allow lint to check dependencies
-        // TODO: re-enable this after we move to AGP 7.0.0-alpha03
-        // https://issuetracker.google.com/174605126
-        checkDependencies false
         // Ignore any tests
         ignoreTestSources true
-
-        // TODO: remove this once https://issuetracker.google.com/issues/159733104 is fixed
-        abortOnError false
-
-        // Lint doesn't seem to handle Kotlin int types + string format very well
-        disable 'StringFormatMatches'
-        // Seems to be broken in 4.0.0-alpha09 https://issuetracker.google.com/issues/148172219
-        disable 'Instantiatable'
+        // Make the build fail on any lint errors
+        abortOnError true
+        // Allow lint to check dependencies
+        // TODO: re-enable this once https://issuetracker.google.com/issues/159733104 is fixed
+        checkDependencies false
     }
 
     buildFeatures {
@@ -114,8 +105,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion Libs.Kotlin.version
-        kotlinCompilerExtensionVersion Libs.AndroidX.Compose.version
+        kotlinCompilerExtensionVersion Versions.compose
     }
 
     testOptions {
@@ -185,6 +175,8 @@ dependencies {
     implementation Libs.AndroidX.Lifecycle.livedata
     implementation Libs.AndroidX.Lifecycle.viewmodel
 
+    implementation Libs.AndroidX.Activity.compose
+
     implementation Libs.AndroidX.emoji
     implementation Libs.AndroidX.Fragment.fragmentKtx
     implementation Libs.AndroidX.Navigation.fragment
@@ -212,7 +204,6 @@ dependencies {
     kapt Libs.Hilt.compiler
 
     implementation Libs.AndroidX.Hilt.work
-    implementation Libs.AndroidX.Hilt.viewmodel
     kapt Libs.AndroidX.Hilt.compiler
 
     implementation Libs.Google.crashlytics
@@ -224,7 +215,7 @@ dependencies {
     testImplementation Libs.robolectric
     testImplementation Libs.AndroidX.Test.core
     testImplementation Libs.AndroidX.Test.rules
-    testImplementation Libs.AndroidX.Test.espressoCore
+    testImplementation Libs.AndroidX.Test.espresso
 }
 
 android.applicationVariants.all { variant ->

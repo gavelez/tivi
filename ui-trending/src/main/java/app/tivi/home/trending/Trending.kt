@@ -23,38 +23,39 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredHeight
-import androidx.compose.foundation.layout.preferredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.AmbientContentAlpha
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Providers
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.AmbientDensity
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import app.tivi.common.compose.AutoSizedCircularProgressIndicator
 import app.tivi.common.compose.PlaceholderPosterCard
 import app.tivi.common.compose.PosterCard
-import app.tivi.common.compose.fakeGridItems
+import app.tivi.common.compose.itemSpacer
+import app.tivi.common.compose.itemsInGrid
 import app.tivi.common.compose.paging.LazyPagingItems
-import app.tivi.common.compose.rememberMutableState
-import app.tivi.common.compose.spacerItem
 import app.tivi.data.resultentities.TrendingEntryWithShow
 import dev.chrisbanes.accompanist.insets.statusBarsPadding
 
@@ -65,22 +66,24 @@ fun Trending(
 ) {
     Surface(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
-            var appBarHeight by rememberMutableState { 0 }
+            var appBarHeight by remember { mutableStateOf(0) }
 
             LazyColumn(Modifier.fillMaxSize()) {
                 item {
-                    val height = with(AmbientDensity.current) { appBarHeight.toDp() }
-                    Spacer(Modifier.preferredHeight(height))
+                    val height = with(LocalDensity.current) { appBarHeight.toDp() }
+                    Spacer(Modifier.height(height))
                 }
 
-                fakeGridItems(
+                itemsInGrid(
                     lazyPagingItems = lazyPagingItems,
                     columns = 3,
                     contentPadding = PaddingValues(4.dp),
                     verticalItemPadding = 2.dp,
                     horizontalItemPadding = 2.dp
                 ) { entry ->
-                    val modifier = Modifier.aspectRatio(2 / 3f).fillMaxWidth()
+                    val modifier = Modifier
+                        .aspectRatio(2 / 3f)
+                        .fillMaxWidth()
                     if (entry != null) {
                         PosterCard(
                             show = entry.show,
@@ -95,13 +98,17 @@ fun Trending(
 
                 if (lazyPagingItems.loadState.append == LoadState.Loading) {
                     item {
-                        Box(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
                             CircularProgressIndicator(Modifier.align(Alignment.Center))
                         }
                     }
                 }
 
-                spacerItem(16.dp)
+                itemSpacer(16.dp)
             }
 
             TrendingAppBar(
@@ -132,7 +139,7 @@ private fun TrendingAppBar(
         Row(
             modifier = Modifier
                 .statusBarsPadding()
-                .preferredHeight(56.dp)
+                .height(56.dp)
                 .padding(start = 16.dp, end = 4.dp)
         ) {
             Text(
@@ -143,16 +150,19 @@ private fun TrendingAppBar(
 
             Spacer(Modifier.weight(1f))
 
-            Providers(AmbientContentAlpha provides ContentAlpha.medium) {
+            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 IconButton(
                     onClick = onRefreshActionClick,
                     enabled = !refreshing,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     if (refreshing) {
-                        AutoSizedCircularProgressIndicator(Modifier.preferredSize(20.dp))
+                        AutoSizedCircularProgressIndicator(Modifier.size(20.dp))
                     } else {
-                        Icon(Icons.Default.Refresh)
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = stringResource(R.string.cd_refresh)
+                        )
                     }
                 }
             }

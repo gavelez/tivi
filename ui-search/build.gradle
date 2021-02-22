@@ -15,8 +15,6 @@
  *
  */
 
-import app.tivi.buildsrc.Libs
-
 apply plugin: 'com.android.library'
 
 apply plugin: 'kotlin-android'
@@ -34,6 +32,7 @@ android {
 
     defaultConfig {
         minSdkVersion buildConfig.minSdk
+        manifestPlaceholders += ['appAuthRedirectScheme': 'empty']
     }
 
     compileOptions {
@@ -46,8 +45,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion Libs.Kotlin.version
-        kotlinCompilerExtensionVersion Libs.AndroidX.Compose.version
+        kotlinCompilerExtensionVersion Versions.compose
     }
 }
 
@@ -80,7 +78,4 @@ dependencies {
 
     implementation Libs.Hilt.library
     kapt Libs.Hilt.compiler
-
-    implementation Libs.AndroidX.Hilt.viewmodel
-    kapt Libs.AndroidX.Hilt.compiler
 }

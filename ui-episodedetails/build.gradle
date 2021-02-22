@@ -15,8 +15,6 @@
  *
  */
 
-import app.tivi.buildsrc.Libs
-
 apply plugin: 'com.android.library'
 
 apply plugin: 'kotlin-android'
@@ -34,6 +32,7 @@ android {
 
     defaultConfig {
         minSdkVersion buildConfig.minSdk
+        manifestPlaceholders += ['appAuthRedirectScheme': 'empty']
 
         // Needed because we're using AssistedInject to inject our ViewModel
         javaCompileOptions {
@@ -53,8 +52,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion Libs.Kotlin.version
-        kotlinCompilerExtensionVersion Libs.AndroidX.Compose.version
+        kotlinCompilerExtensionVersion Versions.compose
     }
 }
 
@@ -90,10 +88,4 @@ dependencies {
 
     implementation Libs.Hilt.library
     kapt Libs.Hilt.compiler
-
-    compileOnly Libs.AssistedInject.annotationDagger2
-    kapt Libs.AssistedInject.processorDagger2
-
-    implementation Libs.AndroidX.Hilt.viewmodel
-    kapt Libs.AndroidX.Hilt.compiler
 }

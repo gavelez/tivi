@@ -20,11 +20,11 @@ import androidx.collection.SparseArrayCompat
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.onCommit
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.paging.AsyncPagingDataDiffer
@@ -129,7 +129,7 @@ class LazyPagingItems<T : Any> internal constructor(
         val state = remember {
             mutableStateOf(LazyListPagingItemState(pagingDataDiffer.getItem(index)))
         }
-        onCommit(index) {
+        DisposableEffect(index) {
             synchronized(currentlyUsedItems) {
                 currentlyUsedItems.put(index, state)
             }
@@ -139,7 +139,7 @@ class LazyPagingItems<T : Any> internal constructor(
                 }
             }
         }
-        onCommit(state.value.pending) {
+        DisposableEffect(state.value.pending) {
             val itemState = state.value
             if (itemState.pending) {
                 // If we're pending, re-fetch the item. We use peek() to not mess with
@@ -148,6 +148,7 @@ class LazyPagingItems<T : Any> internal constructor(
                 // Flip the pending flag back to false
                 itemState.pending = false
             }
+            onDispose { /* no-op */ }
         }
         return state.value.item
     }
@@ -207,7 +208,14 @@ class LazyPagingItems<T : Any> internal constructor(
     /**
      * A [CombinedLoadStates] object which represents the current loading state.
      */
-    var loadState: CombinedLoadStates by mutableStateOf(CombinedLoadStates(InitialLoadStates))
+    var loadState: CombinedLoadStates by mutableStateOf(
+        CombinedLoadStates(
+            refresh = InitialLoadStates.refresh,
+            prepend = InitialLoadStates.prepend,
+            append = InitialLoadStates.append,
+            source = InitialLoadStates,
+        )
+    )
         private set
 
     internal suspend fun collectLoadState() {
@@ -224,12 +232,8 @@ class LazyPagingItems<T : Any> internal constructor(
 }
 
 private class LazyListPagingItemState<T>(item: T?) {
-    var item: T? by mutableStateOf(null)
+    var item: T? by mutableStateOf(item)
     var pending: Boolean by mutableStateOf(false)
-
-    init {
-        this.item = item
-    }
 }
 
 private val IncompleteLoadState = LoadState.NotLoading(false)
@@ -282,7 +286,7 @@ fun <T : Any> LazyListScope.items(
     lazyPagingItems: LazyPagingItems<T>,
     itemContent: @Composable LazyItemScope.(value: T?) -> Unit
 ) {
-    items((0 until lazyPagingItems.itemCount).toList()) { index ->
+    items(lazyPagingItems.itemCount) { index ->
         val item = lazyPagingItems[index]
         itemContent(item)
     }
@@ -303,8 +307,7 @@ fun <T : Any> LazyListScope.itemsIndexed(
     lazyPagingItems: LazyPagingItems<T>,
     itemContent: @Composable LazyItemScope.(index: Int, value: T?) -> Unit
 ) {
-    items((0 until lazyPagingItems.itemCount).toList()) { index ->
-        val item = lazyPagingItems[index]
-        itemContent(index, item)
+    items(lazyPagingItems.itemCount) { index ->
+        itemContent(index, lazyPagingItems[index])
     }
 }
